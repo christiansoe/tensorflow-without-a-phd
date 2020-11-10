@@ -44,19 +44,15 @@ class MnistData(object):
         # load entire Dataset into memory by chunks of 10000
         tf_dataset = tf_dataset.batch(10000)
         tf_dataset = tf_dataset.repeat(1)
-        features, labels = tf_dataset.make_one_shot_iterator().get_next()
-        if not reshape:
-            features = tf.reshape(features, [-1, 28, 28, 1])
-        if one_hot:
-            labels = tf.one_hot(labels, 10)
-        with tf.Session() as sess:
-            while True:
-                try:
-                    feats, labs = sess.run([features, labels])
-                    self.images = feats if self.images is None else np.concatenate([self.images, feats])
-                    self.labels = labs if self.labels is None else np.concatenate([self.labels, labs])
-                except tf.errors.OutOfRangeError:
-                    break
+        iter = tf_dataset.__iter__()
+        
+        for [features, labels] in iter:
+            if not reshape:
+                features = tf.reshape(features, [-1, 28, 28, 1])
+            if one_hot:
+                labels = tf.one_hot(labels, 10)
+            self.images = features if self.images is None else np.concatenate([self.images, features])
+            self.labels = labels if self.labels is None else np.concatenate([self.labels, labels])
 
 
     def next_batch(self, batch_size):

@@ -24,7 +24,7 @@ import matplotlib.animation as animation
 from matplotlib import rcParams
 import math
 import tensorflowvisu_digits
-tf.set_random_seed(0)
+tf.random.set_seed(0)
 
 # number of percentile slices for histogram visualisations
 HISTOGRAM_BUCKETS = 7
@@ -52,7 +52,7 @@ def tf_format_mnist_images(X, Y, Y_, n=100, lines=10):
     digits_right = tf.image.grayscale_to_rgb(tensorflowvisu_digits.digits_right())
     computed_tags = tf.gather(digits_right, tf.argmax(Ys, 1)) # computed digits to be printed on the images
     #superimposed_digits = correct_tags+computed_tags
-    superimposed_digits = tf.where(correct_prediction_s, tf.zeros_like(correct_tags),correct_tags+computed_tags) # only pring the correct and computed digits on unrecognised images
+    superimposed_digits = tf.compat.v1.where(correct_prediction_s, tf.zeros_like(correct_tags),correct_tags+computed_tags) # only pring the correct and computed digits on unrecognised images
     correct_bkg   = tf.reshape(tf.tile([1.3,1.3,1.3], [28*28]), [1, 28,28,3]) # white background
     incorrect_bkg = tf.reshape(tf.tile([1.3,1.0,1.0], [28*28]), [1, 28,28,3]) # red background
     recognised_bkg = tf.gather(tf.concat([incorrect_bkg, correct_bkg], 0), tf.cast(correct_prediction_s, tf.int32)) # pick either the red or the white background depending on recognised status
@@ -76,9 +76,9 @@ def tf_format_mnist_images(X, Y, Y_, n=100, lines=10):
 #               the first value is the min of the data, the last value is the max
 def probability_distribution(data):
     n = HISTOGRAM_BUCKETS
-    data.sort()
-    bucketsize = data.size // n
-    bucketrem  = data.size % n
+    data = tf.sort(data)
+    bucketsize = tf.size(data) // n
+    bucketrem  = tf.size(data) % n
     buckets = np.zeros([n+1])
     buckets[0] = data[0]  # min
     buckets[-1] = data[-1]  # max
@@ -88,7 +88,7 @@ def probability_distribution(data):
     k = 0
     cnt = 0 # only for assert
     lastval = data[0]
-    for i in range(data.size):
+    for i in range(tf.size(data)):
         val = data[i]
         buckn += 1
         cnt += 1
@@ -189,12 +189,12 @@ class MnistDataVis:
         line1, = ax1.plot(self.x1, self.y1, label="training accuracy")
         line2, = ax1.plot(self.x2, self.y2, label="test accuracy")
         legend = ax1.legend(loc='lower right') # fancybox : slightly rounded corners
-        legend.draggable(True)
+        legend.set_draggable(True)
 
         line3, = ax2.plot(self.x1, self.z1, label="training loss")
         line4, = ax2.plot(self.x2, self.z2, label="test loss")
         legend = ax2.legend(loc='upper right') # fancybox : slightly rounded corners
-        legend.draggable(True)
+        legend.set_draggable(True)
 
         ax3.grid(False) # toggle grid off
         ax3.set_axis_off()
@@ -335,9 +335,9 @@ class MnistDataVis:
 
     def append_data_histograms(self, x, datavect1, datavect2, title1=None, title2=None):
         self.x3.append(x)
-        datavect1.sort()
+        #datavect1 = tf.sort(datavect1) # probability_distribution sorts the data
         self.w3 = np.concatenate((self.w3, np.expand_dims(probability_distribution(datavect1), 0)))
-        datavect2.sort()
+        #datavect2 = tf.sort(datavect2) # probability_distribution sorts the data
         self.b3 = np.concatenate((self.b3, np.expand_dims(probability_distribution(datavect2), 0)))
         self._update_xmax(x)
 

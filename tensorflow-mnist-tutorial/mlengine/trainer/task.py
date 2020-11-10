@@ -27,11 +27,11 @@ logging.log(logging.INFO, "Tensorflow version " + tf.__version__)
 #
 
 def read_label(tf_bytestring):
-    label = tf.decode_raw(tf_bytestring, tf.uint8)
+    label = tf.io.decode_raw(tf_bytestring, tf.uint8)
     return tf.reshape(label, [])
 
 def read_image(tf_bytestring):
-    image = tf.decode_raw(tf_bytestring, tf.uint8)
+    image = tf.io.decode_raw(tf_bytestring, tf.uint8)
     return tf.cast(image, tf.float32)/256.0
 
 def load_mnist_data(data_dir):
